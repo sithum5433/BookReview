@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Books - Book Review System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .book-card {
+            border: none;
+            border-radius: 20px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            overflow: hidden;
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+        }
+        .book-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+        .book-cover {
+            height: 200px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 3rem;
+            position: relative;
+            overflow: hidden;
+        }
+        .book-cover::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="50" cy="50" r="1" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+            opacity: 0.3;
+        }
+        .book-title {
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+        }
+        .book-author {
+            color: #6c757d;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+        .rating-display {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        .stars {
+            color: #ffc107;
+            font-size: 1.1rem;
+            margin-right: 0.5rem;
+        }
+        .rating-text {
+            color: #6c757d;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+        .review-count {
+            color: #6c757d;
+            font-size: 0.8rem;
+        }
+        .book-description {
+            color: #495057;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+        .search-card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+        }
+        .search-input {
+            border-radius: 25px;
+            border: 2px solid #e9ecef;
+            padding: 12px 20px;
+            transition: all 0.3s ease;
+        }
+        .search-input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+        .btn-search {
+            border-radius: 25px;
+            padding: 12px 30px;
+            font-weight: 600;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: #6c757d;
+        }
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+    </style>
+</head>
+<body>
+    <!-- Include Navbar -->
+    <div th:replace="layout :: navbar"></div>
+
+    <main class="container py-4">
+        <div class="main-content p-4">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="mb-0">
+                    <i class="fas fa-books text-primary me-2"></i> Book Collection
+                </h1>
+                <div class="text-end" sec:authorize="isAuthenticated()">
+                    <a href="/user/dashboard" class="btn btn-outline-primary">
+                        <i class="fas fa-user-circle me-1"></i> My Reviews
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Search Form -->
+            <div class="card search-card mb-4">
+                <div class="card-body p-4">
+                    <form th:action="@{/books/search}" method="get" class="row g-3">
+                        <div class="col-md-8">
+                            <input type="text" class="form-control search-input" name="query" 
+                                   th:value="${query}" placeholder="Search books by title or author...">
+                        </div>
+                        <div class="col-md-4">
+                            <button type="submit" class="btn btn-primary btn-search w-100">
+                                <i class="fas fa-search me-2"></i> Search
+                            </button>
+                        </div>
+                        <div class="col-12" th:if="${query}">
+                            <a href="/books" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-1"></i> Clear Search
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Books Grid -->
+            <div class="row g-4" th:if="${books != null and !books.empty}">
+                <div class="col-md-6 col-lg-4" th:each="book : ${books}">
+                    <div class="card book-card h-100">
+                        <!-- Book Cover -->
+                        <div class="book-cover">
+                            <i class="fas fa-book"></i>
+                        </div>
+                        
+                        <div class="card-body p-4">
+                            <!-- Book Title -->
+                            <h5 class="book-title" th:text="${book.title}">Book Title</h5>
+                            
+                            <!-- Author -->
+                            <p class="book-author">
+                                <i class="fas fa-user-edit me-1"></i>
+                                <span th:text="${book.author}">Author Name</span>
+                            </p>
+                            
+                            <!-- Rating Display -->
+                            <div class="rating-display">
+                                <div class="stars">
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="far fa-star"></i>
+                                </div>
+                                <span class="rating-text">4.2/5</span>
+                                <span class="review-count ms-2">(12 reviews)</span>
+                            </div>
+                            
+                            <!-- Description -->
+                            <p class="book-description" th:if="${book.description}" 
+                               th:text="${#strings.abbreviate(book.description, 120)}">
+                                Book description...
+                            </p>
+                            
+                            <!-- ISBN -->
+                            <p class="text-muted small mb-3" th:if="${book.isbn}">
+                                <i class="fas fa-barcode me-1"></i>
+                                ISBN: <span th:text="${book.isbn}">1234567890</span>
+                            </p>
+                        </div>
+                        
+                        <div class="card-footer bg-transparent border-0 p-4 pt-0">
+                            <a th:href="@{/books/{id}(id=${book.id})}" class="btn btn-primary w-100">
+                                <i class="fas fa-eye me-2"></i> View Details & Reviews
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Empty State -->
+            <div class="empty-state" th:if="${books == null or books.empty}">
+                <i class="fas fa-book-open"></i>
+                <h4 th:if="${query}">No Books Found</h4>
+                <h4 th:unless="${query}">No Books Available</h4>
+                <p th:if="${query}">No books found matching your search criteria. Try a different search term.</p>
+                <p th:unless="${query}">No books are available at the moment. Check back later!</p>
+                <a href="/books" class="btn btn-primary" th:if="${query}">
+                    <i class="fas fa-arrow-left me-2"></i> View All Books
+                </a>
+            </div>
+        </div>
+    </main>
+
+    <!-- Include Footer -->
+    <div th:replace="layout :: footer"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
